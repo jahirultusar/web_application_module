@@ -1,79 +1,3 @@
-_Copy this recipe template to design and create a database table from a specification._
-
-## 1. Extract nouns from the user stories or specification
-
-```
-# Request:
-POST /albums
-
-# With body parameters:
-title=Voyage
-release_year=2022
-artist_id=2
-
-# Expected response (200 OK)
-(No content)
-
-```
-Your test should assert that the new album is present in the list of records returned by GET /albums (you will also need to test drive this route!).
-
-```
-Nouns:
-
-album, title, release_year, artist, id
-```
-
-## 2. Infer the Table Name and Columns
-
-Put the different nouns in this table. Replace the example with your own nouns.
-
-| Record                | Properties          |
-| --------------------- | ------------------- |
-| album                 | title, release year, artist_id, id |
-
-Name of the table (always plural): `albums`
-
-Column names: `id`, `title`, `release_year, artist_id`, 
-
-## 3. Decide the column types
-
-[Here's a full documentation of PostgreSQL data types](https://www.postgresql.org/docs/current/datatype.html).
-
-Most of the time, you'll need either `text`, `int`, `bigint`, `numeric`, or `boolean`. If you're in doubt, do some research or ask your peers.
-
-Remember to **always** have the primary key `id` as a first column. Its type will always be `SERIAL`.
-
-```
-# EXAMPLE:
-
-id: SERIAL
-title: text
-release_year: int
-artist_id: int
-```
-
-## 4. Write the SQL
-
-```sql
--- EXAMPLE
--- file: albums_table.sql
-
--- Replace the table name, column names and types.
-
-CREATE TABLE albums (
-  id SERIAL PRIMARY KEY,
-  title text,
-  release_year int,
-  artist_id int
-);
-```
-
-## 5. Create the table
-
-```bash
-psql -h 127.0.0.1 database_name < albums_table.sql
-```
-############################################################################
 
 #Plain Route Design Recipe
 
@@ -85,12 +9,22 @@ _Include the HTTP method, the path, and any query or body parameters._
 
 ```
 # EXAMPLE
+# List all albums
+GET /albums
 
-# Album route
+# Create a new album
 POST /albums
-title: string
-release_year: number(str)
-artist_id: number(str)
+  title: string
+  release_year: int
+  artist_id: int
+
+# List all artists
+GET /artists
+
+# Create a new artist
+POST /artists
+  name: string
+  genre: string
 ```
 
 ## 2. Create Examples as Tests
@@ -104,44 +38,41 @@ _Include the status code and the response body._
 ```python
 # EXAMPLE
 
-# POST /albums
-#    title: Hyperspace Sunrise
-#    release_year: 2038
-#    artist_id: 1
-#  Expected response (200 OK):
-"""
-No Content Returns
-"""
-
 # GET /albums
 #  Expected response (200 OK):
 """
-Returns:
-Albums(1, 'Hyperspace Sunset', 2035, 1)
-Albums(2, 'Hyperspace Sunrise', 2038, 1)
+Returns all seeded albums <== need to create some!!
 """
 
 # POST /albums
-# Expected response (400 Bad Request):
+#  Parameters:
+#    title: Voyage
+#    release_year: 2022
+#    artist_id: 2
+#  Expected response (200 OK):
 """
-You need to Submit a title, realease year and title
+Album created successfully
 """
 
 # GET /artists
 #  Expected response (200 OK):
 """
-Returns: Pixies, ABBA, Taylor Swift, Nina Simone
+Pixies, ABBA, Taylor Swift, Nina Simone
 """
 
 # POST /artists
-# Expected response (200 OK):
+#  Parameters:
+#    name: Wild nothing
+#    genre: Indie
+#  Expected response (200 OK):
+"" # (No content)
 
-# POST /artists
-#  Parameters: none
-#  Expected response (400 Bad Request):
+# GET /artists (after POST)
+#  Expected response (200 OK):
 """
-Provides the artist names
+Pixies, ABBA, Taylor Swift, Nina Simone, Wild nothing
 """
+
 ```
 
 ## 3. Test-drive the Route
@@ -152,32 +83,64 @@ Here's an example for you to start with:
 
 ```python
 """
-GET /albums
-  Expected response (200 OK):
-  "This is the albums page!"
+POST /albums
+Test calls POST /albums route
+and adds a new album to the list
+and returns all albums
+response 200
 """
 def test_post_albums(web_client):
-    response = web_client.get('/albums', data={'title': 'voyage', 'release_year': 2022, 'artist_id': 2})
+    response = web_client.post('/albums', data={
+        'title': 'Voyage', 
+        'release_year': 2022, 
+        'artist_id': 2
+    })
     assert response.status_code == 200
-    assert response.data.decode("utf-8") == "\n".join([
-        "Book(1, Invisible Cities, Italo Calvino)",
-        "Book(2, The Man Who Was Thursday, GK Chesterton)",
-        "Book(3, Bluets, Maggie Nelson)",
-        "Book(4, No Place on Earth, Christa Wolf)",
-        "Book(5, Nevada, Imogen Binnie)"
-    ])
+    assert response.data.decode("utf-8") == "Album created successfully"
 
 """
-POST /submit
-  Parameters:
-    name: Leo
-    message: Hello world
-  Expected response (200 OK):
-  "Thanks Leo, you sent this message: "Hello world""
+GET /artists
+  Expected response: 200 OK with initial artist list
 """
-def test_post_submit(web_client):
-    response = web_client.post('/submit', data={'name': 'Leo', 'message': 'Hello world'})
+def test_get_artists(web_client):
+    response = web_client.get('/artists')
     assert response.status_code == 200
-    assert response.data.decode('utf-8') == 'Thanks Leo, you sent this message: "Hello world"'
+    assert response.data.decode("utf-8") == [
+        "Album(1, Doolittle, 1989, 1)",
+        "Album(2, Surfer Rosa, 1988, 1)",
+        "Album(3, Waterloo, 1974, 2)",
+        "Album(4, Super Trouper, 1980, 2)",
+        "Album(5, Bossanova, 1990, 1)",
+        "Album(6, Lover, 2019, 3)",
+        "Album(7, Folklore, 2020, 3)",
+        "Album(8, I Put a Spell on You, 1965, 4)",
+        "Album(9, Baltimore, 1978, 4)",
+        "Album(10, Here Comes the Sun, 1971, 4)",
+        "Album(11, Fodder on My Wings, 1982, 4)",
+        "Album(12, Ring Ring, 1973, 2)"
+    ]
+
+"""
+POST /artists
+  Parameters: name=Wild nothing, genre=Indie
+  Expected response: 200 OK (No content)
+  Followed by GET /artists: updated list
+"""
+def test_post_artists_and_get_updated_list(web_client):
+    post_response = web_client.post('/artists', data={
+        'name': 'Wild nothing', 
+        'genre': 'Indie'
+    })
+    assert post_response.status_code == 200
+    assert post_response.data.decode("utf-8") == ""
+
+    get_response = web_client.get('/artists')
+    assert get_response.status_code == 200
+    assert get_response.data.decode("utf-8") == [
+        Artist(1, "Pixies", "Rock"),
+        Artist(2, "ABBA", "Pop"),
+        Artist(3, "Taylor Swift", "Pop"),
+        Artist(4, "Nina Simone", "Jazz"),
+    ]
 ```
 
