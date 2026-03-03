@@ -1,13 +1,26 @@
-# Tests for your routes go here
-
-# === Example Code Below ===
-
 """
-GET /emoji
+Call POST 
 """
-def test_get_emoji(web_client):
-    response = web_client.get("/emoji")
-    assert response.status_code == 200
-    assert response.data.decode("utf-8") == ":)"
 
-# === End Example Code ===
+# POST /albums
+#    title: Hyperspace Sunrise
+#    release_year: 2038
+#    artist_id: 1
+#  Expected response (200 OK):
+"""
+No Content Returns
+"""
+
+# GET /albums
+#  Expected response (200 OK):
+"""
+Returns:
+Albums(1, 'Hyperspace Sunset', 2035, 1)
+Albums(2, 'Hyperspace Sunrise', 2038, 1)
+"""
+
+# POST /albums
+# Expected response (400 Bad Request):
+"""
+You need to Submit a title, realease year and title
+"""
